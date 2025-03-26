@@ -16,7 +16,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerUser(User user) {
-        return userRepository.save(user); // Save without encoding
+        return userRepository.save(user);
     }
 
     @Override

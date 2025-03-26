@@ -5,6 +5,7 @@ import com.example.demo.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -15,19 +16,29 @@ public class UserController {
         this.userService = userService;
     }
 
+    @GetMapping("/")
+        public String hello(){
+            return " Hello user";
+        }
+
+    public String getMethodName(@RequestParam String param) {
+        return new String();
+    }
+    
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody User user) {
         userService.registerUser(user);
         return ResponseEntity.ok("User registered successfully!");
     }
 
-    @GetMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestParam String email, @RequestParam String password) {
-        boolean isAuthenticated = userService.authenticateUser(email, password);
+    @PostMapping("/login")
+    public ResponseEntity<String> loginUser(@RequestBody User loginRequest) {
+        boolean isAuthenticated = userService.authenticateUser(loginRequest.getEmail(), loginRequest.getPassword());
         if (isAuthenticated) {
-            return ResponseEntity.ok("Login successful!");
+            return ResponseEntity.ok("Login successful!"); 
         } else {
             return ResponseEntity.status(401).body("Invalid credentials.");
         }
     }
+
 }
