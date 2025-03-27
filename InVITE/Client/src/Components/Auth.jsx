@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -13,7 +13,7 @@ const Auth = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = isLogin ? `${import.meta.env.VITE_SERVER_URL}/loginadmin` : `${import.meta.env.VITE_SERVER_URL}/newadmin`;
+    const url = isLogin ? "http://localhost:8080/api/users/login" : "http://localhost:8080/api/users/register";
     
     try {
       const res = await axios.post(url, {
