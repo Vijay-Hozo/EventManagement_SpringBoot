@@ -22,14 +22,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
     public boolean authenticateUser(String email, String password) {
         Optional<User> user = userRepository.findByEmail(email);
-        
-        // Check if the user exists and compare the password
         return user.isPresent() && user.get().getPassword().equals(password);
     }
 
-    // ✅ Added missing method to fetch all users
     @Override
     public List<User> getAllUsers() {
         return userRepository.findAll();

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 const UserAuth = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -15,22 +14,31 @@ const UserAuth = () => {
   const BASE_URL = "http://localhost:8080/api/users";
   const LOGIN_URL = `${BASE_URL}/login`;
   const REGISTER_URL = `${BASE_URL}/register`;
+  const SESSION_URL = `${BASE_URL}/session`;
+  const LOGOUT_URL = `${BASE_URL}/logout`;
+
+  const axiosInstance = axios.create({
+    baseURL: BASE_URL,
+    withCredentials: true, 
+  });
+
+  useEffect(() => {
+    checkSession();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const url = isLogin ? LOGIN_URL : REGISTER_URL;
     const requestData = isLogin
       ? { email, password }
       : { username, email, phone, password };
 
     try {
-      const res = await axios.post(url, requestData);
+      const res = await axiosInstance.post(url, requestData);
 
       if (isLogin) {
         toast.success("Login successful!");
-        localStorage.setItem("token", res.data.token);
-        navigate("/eventpage");
+        checkSession();
       } else {
         toast.success("Registration successful! Please login.");
         setIsLogin(true);
@@ -38,6 +46,33 @@ const UserAuth = () => {
     } catch (err) {
       console.error("Error:", err);
       toast.error(err.response?.data || "Something went wrong!");
+    }
+  };
+
+  const checkSession = async () => {
+    try {
+      const res = await axiosInstance.get(SESSION_URL);
+      console.log("Session Data:", res.data);
+      if (res.data) {
+        sessionStorage.setItem("user", JSON.stringify(res.data)); 
+        navigate("/eventpage"); 
+      }
+    } catch (err) {
+      console.error("Session check failed:", err.response?.data);
+      toast.error("Session expired, please log in again.");
+      sessionStorage.removeItem("user"); 
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post(LOGOUT_URL);
+      sessionStorage.removeItem("user");
+      toast.success("Logged out successfully!");
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err.response?.data);
+      toast.error("Failed to log out.");
     }
   };
 

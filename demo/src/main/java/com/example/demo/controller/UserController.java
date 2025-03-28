@@ -4,11 +4,13 @@ import com.example.demo.model.User;
 import com.example.demo.services.UserService;
 
 import java.util.List;
+import java.util.Optional;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -19,15 +21,15 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/")
-        public String hello(){
-            return " Hello user";
+    @GetMapping("/session")
+    public ResponseEntity<?> checkSession(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return ResponseEntity.status(401).body("Unauthorized! Please log in.");
         }
-
-    public String getMethodName(@RequestParam String param) {
-        return new String();
+        return ResponseEntity.ok(user);
     }
-    
+
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody User user) {
         userService.registerUser(user);
@@ -35,18 +37,20 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody User loginRequest) {
-        boolean isAuthenticated = userService.authenticateUser(loginRequest.getEmail(), loginRequest.getPassword());
-        if (isAuthenticated) {
-            return ResponseEntity.ok("Login successful!"); 
+    public ResponseEntity<?> loginUser(@RequestBody User loginRequest, HttpSession session) {
+        Optional<User> user = userService.getUserByEmail(loginRequest.getEmail());
+
+        if (user.isPresent() && user.get().getPassword().equals(loginRequest.getPassword())) {
+            session.setAttribute("user", user.get()); 
+            return ResponseEntity.ok(user.get());
         } else {
             return ResponseEntity.status(401).body("Invalid credentials.");
         }
     }
 
-    @GetMapping("/getAllUsers")
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+    @PostMapping("/logout")
+    public ResponseEntity<String> logoutUser(HttpSession session) {
+        session.invalidate();
+        return ResponseEntity.ok("Logged out successfully.");
     }
 }
